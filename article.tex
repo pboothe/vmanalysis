@@ -1,0 +1,49 @@
+\documentclass[11pt]{article}
+\usepackage[letterpaper]{geometry}
+\usepackage{url}
+
+\title{A Theoretical Approach to Virtual Memory}
+\author{Peter Boothe\\
+Manhattan College\\
+\url{peter.boothe@manhattan.edu}}
+\date{Submission to SODA 2011} % or maybe ALENEX2011
+
+\newcommand{\heapsort}{{\sc HeapSort}}
+\newcommand{\quicksort}{{\sc QuickSort}}
+\newcommand{\bubblesort}{{\sc BubbleSort}}
+
+\begin{document}
+\maketitle
+
+As memory requirements begin to outstrip available memory on a machine, the
+operating system will allocate virtual memory to supplement the available
+physical memory.  We present, argue for, and experimentally validate a simple
+analysis technique which allows algorithms researchers to analyze the behavior
+of an algorithm when using virtual memory.  In particular, the penalty for
+fetching a page from virtual memory can be extreme, and can make
+previously-small constants quite large. Thus, it would be of great use to be
+able to easily estimate, for a given algorithm, the number of times the
+algorithm will have to pause to retrieve virtual memory off the hard drive.
+
+\section{The Method}
+
+In the worst case, every memory access will have to go to the hard drive.
+This, however, is not an informative worst-case analysis.  The worst-case page
+fault predictions do not reflect the real-world behavior of virtual memory ---
+they reflect a situation in which every cache access is a cache miss!  Instead,
+our method is to simply count the number of non-adjacent memory and array
+accesses.  Using this, we find that we also end up providing a quantitative
+measure of ``cache friendliness'', which is a term often used, but seldomly
+rigorously defined.  We will demonstrate our method using three classic sorting
+techniques: \heapsort, \quicksort, and \bubblesort.
+
+Our analysis of \heapsort is the easiest.  The \heapsort algorithm is simply 
+\begin{verbatim}
+heapsort(array, size)
+    make-heap(array, size)
+    for i = size-1 ... 0
+        array[i] = remove-min(array, i+1)
+    return array
+\end{verbatim}
+
+\end{document}
