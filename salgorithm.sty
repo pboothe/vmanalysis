@@ -1,0 +1,54 @@
+% %%%%%%%%%%%%%%%%%%%% program macros %%%%%%%%%%%%%%%%%
+
+\usepackage{color}
+
+\newcommand{\Do}{{\small\bf do}\ }
+\newcommand{\End}{{\small\bf end}\ }
+\newcommand{\Return}{{\small\bf return\ }}
+\newcommand{\Proc}[1]{#1\+}
+\newcommand{\Returns}{{\small\bf returns}}
+\newcommand{\Procbegin}{{\small\bf begin}}
+\newcommand{\If}{{\small\bf if}\ }
+\newcommand{\Then}{{\small\bf then}\ }
+\newcommand{\Else}{{\small\bf else}\ }
+\newcommand{\rElse}{{\small\bf else}\ }
+\newcommand{\Elseif}{{\small\bf elseif}\ }
+\newcommand{\Foreach}{{\small\bf for each}\ }
+\newcommand{\Endif}{{\small\bf end\ if\ }}
+\newcommand{\Break}{{\small\bf break }}
+\newcommand{\Endproc}[1]{{\small\bf end} #1}
+\newcommand{\For}{{\small\bf for}\ }
+\newcommand{\Endfor}{{\small\bf end\ for}}
+\newcommand{\While}{{\small\bf while}\ }
+\newcommand{\Endwhile}{{\small\bf end\ while}}
+\newcommand{\LogAnd}{{\small\bf and}}
+
+\newcommand{\Repeat}{{\small\bf repeat}\ }
+\newcommand{\Until}{{\small\bf Until}}
+\newcommand{\Loop}{{\bf loop}\ }
+\newcommand{\Endloop}{{\bf end\ loop}\ }
+
+\newcommand{\xbeginlgox}{\begin{minipage}{1in}\begin{tabbing}
+        \quad\=\qquad\=\qquad\=\qquad\=\qquad\=\qquad\=\qquad\=\kill}
+\newcommand{\xendlgox}{\end{tabbing}\end{minipage}}
+\newenvironment{algorithm}{\begin{tabular}{l}\xbeginlgox}
+        {\xendlgox\end{tabular}}
+
+\newenvironment{program}{
+   \begin{minipage}{4.0in}
+   \begin{tabbing}
+      \= \ \ \ \= \ \ \ \ \= \ \ \ \ \= \ \ \ \ \=
+      \ \ \ \ \= \ \ \ \ \= \ \ \ \ \= \ \ \ \ \=
+      \ \ \ \ \= \ \ \ \ \= \ \ \ \ \= \ \ \ \ \= \kill
+}{
+   \end{tabbing}
+   \end{minipage}
+}
+
+\DefineNamedColor{named}{RedViolet} {cmyk}{0.07,0.90,0,0.34}
+
+\newcommand{\AlgorithmI}[1]{{\textcolor[named]{RedViolet}{\texttt{\bf{#1}}}}}
+\newcommand{\Algorithm}[1]{{\AlgorithmI{#1}\index{#1@{\AlgorithmI{#1}}}}}
+
+\newcommand{\Graph}{\mathsf{G}}
+
