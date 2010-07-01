@@ -12,10 +12,11 @@ int cmp(const void *i, const void *j)
 
 int main(int argc, char **argv)
 {
-        int *array, i, SIZE;
-        SIZE = atoi(argv[1])*Mb/sizeof(int);
+        int *array, i;
+        long SIZE;
+        SIZE = atol(argv[1])/sizeof(int)*Mb;
 
-        array = malloc(sizeof(int) * SIZE);
+        array = malloc(SIZE*sizeof(int));
         for (i = 0; i < SIZE; i++) array[i] = i*7 % SIZE;
 
         heapsort(array, SIZE, sizeof(int), &cmp);
