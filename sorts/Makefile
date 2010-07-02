@@ -4,15 +4,17 @@ QUICKDATA=$(addprefix quicksortdata/,$(addsuffix .dat,$(shell seq -w 128 128 409
 all: heapsort quicksort memkiller $(HEAPDATA) $(QUICKDATA)
 
 heapsortdata/%.dat: heapsort
+	mkdir -p $@
 	time ./heapsort $* 2>> $@
 
 heapsort: heapsort.c
-	\rm -f $(HEAPDATA)
 	gcc -g -l bsd $< -o $@
 
 quicksort: quicksort.c
-	\rm -f $(QUICKDATA)
 	gcc -g $< -o $@
 
 memkiller: memkiller.c
 	gcc -g $< -o $@
+
+clean:
+	\rm -Rf heapsort quicksort memkiller $(HEAPDATA) $(QUICKDATA) 
