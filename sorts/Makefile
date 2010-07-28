@@ -1,5 +1,5 @@
 MEM=$(shell cat /proc/meminfo | grep MemTotal | awk '{ print $$2 }')
-HEAPDATA=$(addprefix heapsortdata/$(MEM)-,$(addsuffix .dat,$(shell seq -w 16 16 1024)))
+HEAPDATA=$(addprefix heapsortdata/$(MEM)-,$(addsuffix .dat,$(shell seq -w 64 64 1024)))
 
 all: heapsort quicksort memkiller $(HEAPDATA) 
 
