@@ -1,11 +1,36 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <bsd/stdlib.h>
 
-int cmp(const void *i, const void *j)
+void mergesort(int array[], long lo, long hi)
 {
-        if (*((int*)i) == *((int*)j)) return 0;
-        else return *((int*)i) < *((int*)j) ? 1 : -1;
+    int *spare;
+    int ssize;
+    long sindex, hindex, i;
+    long mid;
+    if (lo+1 >= hi) return;
+
+    mid = (lo + hi) / 2;
+    mergesort(array, lo, mid);
+    mergesort(array, mid, hi);
+
+    ssize = mid-lo;
+    spare = (int *)malloc(ssize * sizeof(int));
+    memcpy(array, spare, ssize * sizeof(int));
+
+    sindex = 0;
+    hindex = mid;
+    i = lo;
+    
+    while (sindex < ssize && hindex < hi) {
+        if (spare[sindex] < array[hindex])
+            array[i++] = spare[sindex++];
+        else
+            array[i++] = array[hindex++];
+    }
+
+    while (sindex < ssize) array[i++] = spare[sindex++];
+
+    free(spare);
 }
 
 #define Mb (1024*1024)
@@ -27,7 +52,7 @@ int main(int argc, char **argv)
                     array[i] = i*7 % SIZE;
                 }
 
-                mergesort(array, SIZE, sizeof(int), &cmp);
+                mergesort(array, 0, SIZE);
         }
 
         free(array);
