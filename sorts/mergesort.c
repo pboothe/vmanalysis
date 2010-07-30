@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 
 void mergesort(int array[], long lo, long hi)
 {
@@ -15,7 +17,7 @@ void mergesort(int array[], long lo, long hi)
 
     ssize = mid-lo;
     spare = (int *)malloc(ssize * sizeof(int));
-    memcpy(array, spare, ssize * sizeof(int));
+    memcpy(spare, &(array[lo]), ssize * sizeof(int));
 
     sindex = 0;
     hindex = mid;
@@ -49,10 +51,14 @@ int main(int argc, char **argv)
         
         while (repeats--> 0) { 
                 for (i = 0; i < SIZE; i++) {
-                    array[i] = i*7 % SIZE;
+                        array[i] = i*7 % SIZE + 1;
+                        printf("%d ", array[i]);
                 }
+                printf("\n");
 
                 mergesort(array, 0, SIZE);
+
+                printf("\n");
         }
 
         free(array);

@@ -3,7 +3,7 @@ MAXMEM=$(shell (echo "(2*$(MEM))/1024 + 64" | bc; echo 512) | sort -n | tail -n 
 HEAPDATA=$(addprefix heapsortdata/$(MEM)-,$(addsuffix .dat,$(shell seq -w 64 64 $(MAXMEM))))
 MERGEDATA=$(addprefix heapsortdata/$(MEM)-,$(addsuffix .dat,$(shell seq -w 64 64 $(MAXMEM))))
 
-all: $(HEAPDATA) $(MERGEDATA)
+all: heapsort mergesort $(HEAPDATA) $(MERGEDATA)
 
 heapsortdata/$(MEM)-%.dat: heapsort
 	/usr/bin/time ./heapsort $* 1 2> $@
@@ -15,7 +15,7 @@ heapsort: heapsort.c
 	gcc -g -l bsd $< -o $@
 
 mergesort: mergesort.c
-	gcc -g -l bsd $< -o $@
+	gcc -g $< -o $@
 
 clean:
 	\rm -Rf heapsort mergesort $(HEAPDATA) $(MERGEDATA)
