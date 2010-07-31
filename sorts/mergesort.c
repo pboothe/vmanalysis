@@ -51,14 +51,10 @@ int main(int argc, char **argv)
         
         while (repeats--> 0) { 
                 for (i = 0; i < SIZE; i++) {
-                        array[i] = i*7 % SIZE + 1;
-                        printf("%d ", array[i]);
+                        array[i] = i*7 % SIZE;
                 }
-                printf("\n");
 
                 mergesort(array, 0, SIZE);
-
-                printf("\n");
         }
 
         free(array);

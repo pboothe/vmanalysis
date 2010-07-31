@@ -1,9 +1,12 @@
 MEM=$(shell cat /proc/meminfo | grep MemTotal | awk '{ print $$2 }')
 MAXMEM=$(shell (echo "(2*$(MEM))/1024 + 64" | bc; echo 512) | sort -n | tail -n 1 )
 HEAPDATA=$(addprefix heapsortdata/$(MEM)-,$(addsuffix .dat,$(shell seq -w 64 64 $(MAXMEM))))
-MERGEDATA=$(addprefix heapsortdata/$(MEM)-,$(addsuffix .dat,$(shell seq -w 64 64 $(MAXMEM))))
+MERGEDATA=$(addprefix mergesortdata/$(MEM)-,$(addsuffix .dat,$(shell seq -w 64 64 $(MAXMEM))))
 
-all: heapsort mergesort $(HEAPDATA) $(MERGEDATA)
+all: heapsort mergesort heapdata mergedata
+
+heapdata: $(HEAPDATA) 
+mergedata: $(MERGEDATA)
 
 heapsortdata/$(MEM)-%.dat: heapsort
 	/usr/bin/time ./heapsort $* 1 2> $@
