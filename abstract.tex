@@ -1,0 +1,157 @@
+\documentclass[11pt]{article}
+\usepackage[letterpaper]{geometry}
+\usepackage{url}
+\usepackage{salgorithm}
+
+\title{A Simple and Useful Model of Virtual Memory Performance}
+\author{Peter Boothe and Gregory Rae\\
+Manhattan College\\
+\url{peter.boothe@manhattan.edu}
+\\
+\url{greg.rae@gmail.com}
+}
+\date{Submission to SODA 2011} % or maybe ALENEX2011
+
+\newcommand{\heapsort}{{\sc HeapSort}}
+\newcommand{\quicksort}{{\sc QuickSort}}
+\newcommand{\mergesort}{{\sc MergeSort}}
+\newcommand{\NAA}{\textrm{NAA}}
+
+\begin{document}
+\maketitle
+
+As memory requirements begin to outstrip available memory on a machine, the
+operating system will allocate virtual memory to supplement the available
+physical memory.  We present, argue for, and experimentally validate a simple
+model and analysis technique which allows algorithm developers to analyze the
+behavior of an algorithm when virtual memory is used.  In particular, the
+penalty for a page fault in virtual memory can be extreme, and can make
+previously-small constants quite large. Thus, it would be of great use to be
+able to easily estimate, for a given algorithm, the number of times the
+algorithm will have to wait for the operating system to retrieve virtual memory
+pages off the hard drive.
+
+\section{The Method}
+
+In the worst case, every memory access will have to go to the hard drive.
+This, however, is not an informative worst-case analysis.  The worst-case page
+fault predictions do not reflect the real-world behavior of virtual memory ---
+they reflect a situation in which every cache access is a cache miss! Our
+model predicts that all non-adjacent memory accesses have a uniform non-zero probability of causing a page fault. 
+
+Our method of estimating the number of page faults is therefore to count the
+number of non-adjacent memory accesses.  Using this, we find that we also end
+up providing a quantitative measure of ``cache friendliness'', which is a term
+often used, but seldom rigorously defined.  We demonstrate our method
+using three classic sorting techniques: \heapsort, \quicksort, and \mergesort.
+
+
+\subsection{\heapsort\ Page Fault Analysis}
+Our analysis of \heapsort\ is the easiest.  The \heapsort\ algorithm, which we
+take from Cormen {\it et al.}\cite{clrs}, is defined, with all of its
+supporting functions, in Figure~\ref{fig:hsort}.
+
+\begin{figure}
+\begin{algorithm}
+\Algorithm{HeapSort}$(array, size)$\+\\
+    Build-Max-Heap$(array, size)$\\
+    \For $i \gets size$ \DownTo\ $2$\+\\
+        exchange $array[1] \leftrightarrow array[i]$\\
+        $size \gets size - 1$\\
+        Max-Heapify$(array, 1, size)$\-\\
+    \Return $array$\-\\
+\\
+\Algorithm{Build-Max-Heap}$(array, size)$\+\\
+    \For $i \gets \lfloor \frac{size}{2} \rfloor$ \DownTo\ $1$\+\\
+        Max-Heapify$(array, i, size)$\-\-\\
+\\
+\Algorithm{Max-Heapify}$(array, i, size)$\+\\
+    $l \gets 2*i$\\
+    $r \gets 2*i + 1$\\
+    $largest \gets i$\\
+    \If $l < size$ and $array[l] > array[largest]$\+\\
+            $largest \gets l$\-\\
+    \If $r < size$ and $array[r] > array[largest]$\+\\
+            $largest \gets r$\-\\
+    \If $largest \neq i$\+\\
+        exchange $array[i] \leftrightarrow array[largest]$\\
+        Max-Heapify$(array, largest, size)$
+\end{algorithm}
+
+\caption{\heapsort\ from Cormen {\it et al.}\cite{clrs}.}
+\label{fig:hsort}
+\end{figure}
+
+In the pseudocode of \heapsort, we note that, with the exception of the very
+top of the heap, at no point do we ever access memory adjacent to the most
+recently used memory location.  Therefore, we predict that the number of page
+faults will be proportional to the number of memory accesses, which in the case
+of \heapsort\ is proportional to its runtime of $O(n \log n)$.
+
+\subsection{\quicksort\ Page Fault Analysis}
+The \quicksort\ algorithm will be dealt with later.
+
+\subsection{\mergesort\ Page Fault Analysis}
+The \mergesort\ algorithm, which we also
+take from Cormen {\it et al.}\cite{clrs}, is defined, with all of its
+supporting functions, in Figure~\ref{fig:msort}.  In our analysis, the only consideration is the number and location of memory accesses, and memory accesses only occur in the ``merge'' portion of the algorithm.
+
+\begin{figure}
+\begin{algorithm}
+\Algorithm{MergeSort}$(array, p, r)$\+\\
+    \If $p < r$\+\\
+        $q \gets \lfloor\frac{p+r}{2}\rfloor$\\
+        MergeSort$(array, p, q)$\\
+        MergeSort$(array, q+1, r)$\\
+        Merge$(array, p, q, r)$\-\-\\
+\\
+\Algorithm{Merge}$(array, p, q, r)$\+\\
+    $n_1 \gets q - p + 1$\\
+    $n_2 \gets r - q$\\
+    create arrays $L[1\ldots n_1+1]$ and $R[1\ldots n_2+1]$\\
+    \For $i \gets 1 \ldots n_1$\+\\
+        $L[i] \gets array[p+i-1]$\-\\
+    \For $j \gets 1 \ldots n_2$\+\\
+        $R[j] \gets array[q+j]$\-\\
+    $L[n_1+1] \gets \infty$, $R[n_2+1] \gets \infty$\\
+    $i \gets 1$, $j \gets 1$\\
+    \For $k \gets p \ldots r$\+\\
+        \If $L[i] \le R[j]$\+\\
+            $array[k] \gets L[i]$\\
+            $i \gets i+1$\-\\
+        \Else\+\\
+            $array[k] \gets R[j]$\\
+            $j \gets j+1$
+\end{algorithm}
+
+\caption{\mergesort\ from Cormen {\it et al.}\cite{clrs}.}
+\label{fig:msort}
+\end{figure}
+
+In merging, the first step is to access the beginning and middle of the
+passed-in array (two non-adjacent accesses). Then, two extra arrays are
+created, the contents of the passed-in array are copied over to the new arrays
+(many accesses, only the first access to each array is non-adjacent).  Then, in
+the merge step, the contents of the two new arrays are merged back into the
+main array (many accesses, but only the first access to each array is
+non-adjacent).
+
+In total, each call to the merge function will require five non-adjacent memory
+accesses.  Therefore, over the whole of the algorithm, we find that the number
+of non-adjacent accesses ($\NAA(n)$) is $$\NAA(n) = 5 + 2  \NAA(\frac{n}{2})$$
+Immediately, by the master theorem, we can see that $\NAA(n) \in O(n)$, and
+that we therefore expect the number of page faults to grow linearly with the
+size of the input to \mergesort.
+
+\section{Experimental Validation of Our Model}
+\subsection{Experimental Setup}
+\subsection{\heapsort}
+\subsection{\quicksort}
+\subsection{\mergesort}
+
+\section{Conclusion}
+
+\bibliographystyle{abbrv}
+\bibliography{bibliography}
+
+\end{document}
