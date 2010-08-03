@@ -9,13 +9,13 @@ void mergesort(int array[], long lo, long hi)
     int ssize;
     long sindex, hindex, i;
     long mid;
-    if (lo+1 >= hi) return;
+    if (lo+1 >= hi) return; // Base case
 
-    mid = (lo + hi) / 2;
+    mid = (lo + hi) / 2;  // Recurse on each half
     mergesort(array, lo, mid);
     mergesort(array, mid, hi);
 
-    ssize = mid-lo;
+    ssize = mid-lo; // Only copy out the first half
     spare = (int *)malloc(ssize * sizeof(int));
     memcpy(spare, &(array[lo]), ssize * sizeof(int));
 
@@ -23,11 +23,11 @@ void mergesort(int array[], long lo, long hi)
     hindex = mid;
     i = lo;
     
-    while (sindex < ssize && hindex < hi) {
+    while (sindex < ssize && hindex < hi) { // Merge
         if (spare[sindex] < array[hindex])
             array[i++] = spare[sindex++];
         else
-            array[i++] = array[hindex++];
+            array[i++] = array[hindex++]; // The 2nd half is in-place
     }
 
     while (sindex < ssize) array[i++] = spare[sindex++];
