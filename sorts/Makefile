@@ -3,10 +3,19 @@ MAXMEM=$(shell (echo "(2*$(MEM))/1024 + 64" | bc; echo 512) | sort -n | tail -n 
 HEAPDATA=$(addprefix heapsortdata/$(MEM)-,$(addsuffix .dat,$(shell seq -w 64 64 $(MAXMEM))))
 MERGEDATA=$(addprefix mergesortdata/$(MEM)-,$(addsuffix .dat,$(shell seq -w 64 64 $(MAXMEM))))
 
-all: heapsort mergesort heapdata mergedata
+all: processeddata
 
-heapdata: $(HEAPDATA) 
-mergedata: $(MERGEDATA)
+processeddata:
+	./makedats.sh mergesortdata
+	./makedats.sh heapsortdata
+
+mempressure.pdf: mempressure.dat
+mempressure.dat:
+	python 
+
+heapdata: $(HEAPDATA) heapsort
+
+mergedata: $(MERGEDATA) mergesort
 
 heapsortdata/$(MEM)-%.dat: heapsort
 	/usr/bin/time ./heapsort $* 1 2> $@

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 void mergesort(int array[], long lo, long hi)
 {
     int *spare;
@@ -27,7 +26,7 @@ void mergesort(int array[], long lo, long hi)
         if (spare[sindex] < array[hindex])
             array[i++] = spare[sindex++];
         else
-            array[i++] = array[hindex++]; // The 2nd half is in-place
+            array[i++] = array[hindex++]; // The 2nd half is in-place - no swap
     }
 
     while (sindex < ssize) array[i++] = spare[sindex++];
