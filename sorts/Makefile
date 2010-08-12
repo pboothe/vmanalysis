@@ -5,14 +5,21 @@ MERGEDATA=$(addprefix mergesortdata/$(MEM)-,$(addsuffix .dat,$(shell seq -w 64 6
 
 all: processeddata
 
-processeddata:
+processeddata: memsizes.png probsizes.png ratio.png
+
+datfiles: 
 	./makedats.sh mergesortdata
 	./makedats.sh heapsortdata
 
-mempressure.pdf: mempressure.dat
-mempressure.dat:
-	python 
+memsizes.png: memsizes.sh
+	./memsizes.sh | gnuplot > $@
 
+probsizes.png: probsizes.sh
+	./probsizes.sh | gnuplot > $@
+
+ratios.png: ratios.sh
+	./ratios.sh | gnuplot > $@
+        
 heapdata: $(HEAPDATA) heapsort
 
 mergedata: $(MERGEDATA) mergesort
