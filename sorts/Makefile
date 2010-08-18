@@ -5,17 +5,27 @@ MERGEDATA=$(addprefix mergesortdata/$(MEM)-,$(addsuffix .dat,$(shell seq -w 64 6
 
 all: processeddata
 
-processeddata: memsizes.png probsizes.png ratio.png
+processeddata: memsizes.pdf ratios.pdf
 
 datfiles: 
 	./makedats.sh mergesortdata
 	./makedats.sh heapsortdata
+
+memsizes.pdf: memsizes.sh
+	./memsizes.sh epslatex memsizes.tex | gnuplot 
+	epstopdf memsizes.eps
+	rm -f memsizes.png
 
 memsizes.png: memsizes.sh
 	./memsizes.sh | gnuplot > $@
 
 probsizes.png: probsizes.sh
 	./probsizes.sh | gnuplot > $@
+
+ratios.pdf: ratios.sh
+	./ratios.sh epslatex ratios.tex | gnuplot 
+	epstopdf ratios.eps
+	rm -f ratios.png
 
 ratios.png: ratios.sh
 	./ratios.sh | gnuplot > $@

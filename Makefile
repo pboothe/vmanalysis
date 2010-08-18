@@ -1,5 +1,6 @@
 article.pdf: article.tex
 	pdflatex article
 	bibtex article
-	latexmk -pdf $<
+	pdflatex article
+	pdflatex article
 	latexmk -c $<

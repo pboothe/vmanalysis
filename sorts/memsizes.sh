@@ -1,20 +1,33 @@
 #!/bin/bash
 
+TERM=png
+OUTPUT=
+if [ -n "$1" ]
+then
+        TERM=$1
+        OUTPUT=$2
+fi
+
 cat - <<EOF
-set term png
+set term ${TERM}
 set title "Problem size vs Page Faults\\nEach line holds available memory constant"
 set yrange [0:1000000]
 set xrange [0:1100]
 set style line 1 linewidth 2 pt 4 linetype 3 ps 2
 set style line 2 linewidth 2 linetype 10 ps 2
 set xlabel "Problem size in megabytes"
-set ylabel "# of major page faults"
+set ylabel "Number of major page faults"
 set border 0
 set key below
 set grid
 set mxtics 
 set mytics 
 EOF
+
+if [ -n "$OUTPUT" ]
+then
+        echo set output \"${OUTPUT}\"
+fi
 
 ( echo plot
 KEYED=

@@ -2,15 +2,16 @@
 \usepackage[letterpaper]{geometry}
 \usepackage{url}
 \usepackage{salgorithm}
+\usepackage{graphicx} \graphicspath{{sorts/}}
+
+
 
 \title{A Simple and Useful Model of Virtual Memory Performance}
-\author{Peter Boothe and Gregory Rae\\
+\author{Peter Boothe\\
 Manhattan College\\
 \url{peter.boothe@manhattan.edu}
-\\
-\url{greg.rae@gmail.com}
 }
-\date{Submission to SODA 2011} % or maybe ALENEX2011
+\date{Submission to ALENEX2011}
 
 \newcommand{\heapsort}{{\sc HeapSort}}
 \newcommand{\quicksort}{{\sc QuickSort}}
@@ -49,7 +50,8 @@ using three classic sorting techniques: \heapsort, \quicksort, and \mergesort.
 \subsection{\heapsort\ Page Fault Analysis}
 Our analysis of \heapsort\ is the easiest.  The \heapsort\ algorithm, which we
 take from Cormen {\it et al.}\cite{clrs}, is defined, with all of its
-supporting functions, in Figure~\ref{fig:hsort}.
+supporting functions, in Figure~\ref{fig:hsort}.  The implementation we tested
+is from the BSD standard library, and libbsd on Linux.
 
 \begin{figure}
 \begin{algorithm}
@@ -88,66 +90,115 @@ recently used memory location.  Therefore, we predict that the number of page
 faults will be proportional to the number of memory accesses, which in the case
 of \heapsort\ is proportional to its runtime of $O(n \log n)$.
 
-\subsection{\quicksort\ Page Fault Analysis}
-The \quicksort\ algorithm will be dealt with later.
+\subsection{\mergesort\ Page Fault Analysis} 
 
-\subsection{\mergesort\ Page Fault Analysis}
-The \mergesort\ algorithm, which we also
-take from Cormen {\it et al.}\cite{clrs}, is defined, with all of its
-supporting functions, in Figure~\ref{fig:msort}.  In our analysis, the only consideration is the number and location of memory accesses, and memory accesses only occur in the ``merge'' portion of the algorithm.
+The \mergesort\ algorithm we take from Cormen {\it et al.}\cite{clrs} with the
+memory-efficiency improvement that we only copy out the first half of the
+array.  Our implementation, in its entirety, may be found in
+Figure~\ref{fig:msort}.  In our analysis, the only consideration is the number
+and location of memory accesses, and memory accesses only occur in the
+``merge'' portion of the algorithm.
 
 \begin{figure}
-\begin{algorithm}
-\Algorithm{MergeSort}$(array, p, r)$\+\\
-    \If $p < r$\+\\
-        $q \gets \lfloor\frac{p+r}{2}\rfloor$\\
-        MergeSort$(array, p, q)$\\
-        MergeSort$(array, q+1, r)$\\
-        Merge$(array, p, q, r)$\-\-\\
-\\
-\Algorithm{Merge}$(array, p, q, r)$\+\\
-    $n_1 \gets q - p + 1$\\
-    $n_2 \gets r - q$\\
-    create arrays $L[1\ldots n_1+1]$ and $R[1\ldots n_2+1]$\\
-    \For $i \gets 1 \ldots n_1$\+\\
-        $L[i] \gets array[p+i-1]$\-\\
-    \For $j \gets 1 \ldots n_2$\+\\
-        $R[j] \gets array[q+j]$\-\\
-    $L[n_1+1] \gets \infty$, $R[n_2+1] \gets \infty$\\
-    $i \gets 1$, $j \gets 1$\\
-    \For $k \gets p \ldots r$\+\\
-        \If $L[i] \le R[j]$\+\\
-            $array[k] \gets L[i]$\\
-            $i \gets i+1$\-\\
-        \Else\+\\
-            $array[k] \gets R[j]$\\
-            $j \gets j+1$
-\end{algorithm}
+\begin{verbatim}
+void mergesort(int array[], long lo, long hi)
+{
+    int *spare;
+    int ssize;
+    long sindex, hindex;
+    long mid;
 
-\caption{\mergesort\ from Cormen {\it et al.}\cite{clrs}.}
+    // Base case
+    if (lo+1 >= hi) return; 
+
+    // Recurse on each half
+    mid = (lo + hi) / 2;  
+    mergesort(array, lo, mid);
+    mergesort(array, mid, hi);
+
+    // Merge
+    ssize = mid-lo; // Only copy out the first half
+    spare = (int *)malloc(ssize * sizeof(int));
+    memcpy(spare, &(array[lo]), ssize * sizeof(int));
+
+    sindex = 0;
+    hindex = mid;
+    while (sindex < ssize && hindex < hi) {
+        if (spare[sindex] < array[hindex])
+            array[lo++] = spare[sindex++];
+        else
+            array[lo++] = array[hindex++];
+    }
+
+    while (sindex < ssize) array[lo++] = spare[sindex++];
+
+    free(spare);
+}
+\end{verbatim}
+
+
+\caption{Our \mergesort\ implementation in its entirety.}
 \label{fig:msort}
 \end{figure}
 
-In merging, the first step is to access the beginning and middle of the
-passed-in array (two non-adjacent accesses). Then, two extra arrays are
-created, the contents of the passed-in array are copied over to the new arrays
-(many accesses, only the first access to each array is non-adjacent).  Then, in
-the merge step, the contents of the two new arrays are merged back into the
-main array (many accesses, but only the first access to each array is
-non-adjacent).
+In merging, the first step is to allocate a new array of size equal to half of
+the passed-in array.  Then, the first half of the passed-in array is copied to
+the new array.  The copying is done by accessing consecutive elements of each
+array, and so once the beginning of each array has been accessed, all subsequent memory accesses are adjacent.  Therefore, the initial step has two non-adjacent accesses.
 
-In total, each call to the merge function will require five non-adjacent memory
-accesses.  Therefore, over the whole of the algorithm, we find that the number
-of non-adjacent accesses ($\NAA(n)$) is $$\NAA(n) = 5 + 2  \NAA(\frac{n}{2})$$
-Immediately, by the master theorem, we can see that $\NAA(n) \in O(n)$, and
-that we therefore expect the number of page faults to grow linearly with the
+Subsequently, we treat the latter half of the passed-in array as one queue, and the newly-allocated array as the second queue.  We then merge by repeatedly removing the smaller item from the front of the two queues and overwriting an element of the passed-in array.  Every examination requires a memory access, but in all cases except the initial examination of the fronts of the queues, all memory accesses occur adjacent to previous memory accesses.  Therefore, to merge the newly-allocated array and the passed-in array requires two non-adjacent memory accesses.  In total, each call to our \mergesort function can require four non-adjacent memory accesses.
+
+Over the whole of the algorithm, we find that the number
+of non-adjacent accesses for \mergesort on an array of size $n$ ($\NAA(n)$) is $$\NAA(n) = 4 + 2\NAA(\frac{n}{2})$$
+By the master theorem, we can see that $\NAA(n) \in \Theta(n)$, and
+we therefore expect the number of page faults to grow linearly with the
 size of the input to \mergesort.
 
-\section{Experimental Validation of Our Model}
+\section{Experimental Validation of Our Model's Conclusions}
+
+An experimental model can not be verified to be correct, it can only be shown
+that the available tests do not prove the model wrong.  Here, we construct a
+set of tests which repeatedly fail to disprove our model.
+
 \subsection{Experimental Setup}
+
+To analyze the number of major page faults in an algorithm, we must run our
+algorithm in low-memory conditions so that the operating system is forced to
+allocate and use virtual memory for our program.  Unfortunately, accessing swap
+is incredibly slow --- a major part of the motivation for our study --- which
+means that under low-memory conditions our tests may require 100x more time to
+finish.  
+
+We reconcile the opposing forces by running our tests in a virtual machine via
+the Qemu emulator.  The machine which is running the emulator was given 4
+gigabytes of memory.  Of those 4 Gb, half of it was allocated to be a RAM disk.
+The swap partition of the emulated machine was a file stored on that RAM disk.
+This meant that the page faults of the emulated machine would still be
+recorded, but that the emulated machine would not suffer a performance hit, as
+the emulated swap was backed by an extremely fast RAM disk!  We recommend this
+technique for anyone who would like to count page faults but does not want to
+waste a lot of time.
+
+Interestingly, the RAM disk turned out to be helpful, but not essential, as the
+natural caching behaviour of the host operating system meant that even when the
+emulated swap was backed by a physical hard drive, it was often cached in the
+memory of the host operating system.
+
 \subsection{\heapsort}
-\subsection{\quicksort}
+
 \subsection{\mergesort}
+
+\subsection{Number of Page Faults Compared}
+
+\begin{figure}
+\input{sorts/memsizes.tex}
+\caption{Number of major page faults for \mergesort\ and \heapsort\ at a variety of memory sizes.  Note that at almost all memory sizes, \mergesort\ is better.}
+\end{figure}
+
+\begin{figure}
+\input{sorts/ratios.tex}
+\caption{Number major page faults for \heapsort\ divided by the number of major page faults for \mergesort\ at a variety of memory sizes.  The fact that this ratio grows over time indicates the \heapsort\ has asymptotically more page faults than \mergesort, which is exactly what is predicted by our model!}
+\end{figure}
 
 \section{Conclusion}
 
