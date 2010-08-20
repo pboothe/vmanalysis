@@ -12,7 +12,7 @@ datfiles:
 	./makedats.sh heapsortdata
 
 memsizes.pdf: memsizes.sh
-	./memsizes.sh epslatex memsizes.tex | gnuplot 
+	./memsizes.sh "epslatex color" memsizes.tex | gnuplot 
 	epstopdf memsizes.eps
 	rm -f memsizes.png
 
@@ -23,7 +23,7 @@ probsizes.png: probsizes.sh
 	./probsizes.sh | gnuplot > $@
 
 ratios.pdf: ratios.sh
-	./ratios.sh epslatex ratios.tex | gnuplot 
+	./ratios.sh "epslatex color" ratios.tex | gnuplot 
 	epstopdf ratios.eps
 	rm -f ratios.png
 
