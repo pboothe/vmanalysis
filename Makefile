@@ -3,4 +3,3 @@ article.pdf: article.tex
 	bibtex article
 	pdflatex article
 	pdflatex article
-	latexmk -c $<
