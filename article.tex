@@ -1,4 +1,10 @@
 \documentclass{acmtrans2m}
+
+\def\endbottomstuff{\end{figure}\gdef\permission{}}
+
+\def\runningfoot{\def\@runningfoot{}}
+\def\firstfoot{\def\@firstfoot{}}
+
 \usepackage{url}
 \usepackage{salgorithm}
 \usepackage{graphicx} \graphicspath{{sorts/}}
@@ -14,8 +20,12 @@
 Manhattan College
 }
 \begin{abstract} 
-We define a simple model of virtual memory in an effort to predict the number of page faults that an algorithm will occur over the course of its lifetime.  We then use that model to analyze how many page faults we would expect to see with two of the best-known and most well-studied sorting algorithms.  Then, we run multiple experiments in an effort to show that the predictions of our model match up with reality.
-
+We define a simple model of virtual memory in an effort to predict the number
+of page faults that an algorithm will occur over the course of its lifetime.
+We then use that model to analyze how many page faults we would expect to see
+with two of the best-known and most well-studied sorting algorithms.  Then, we
+run multiple experiments in an effort to show that the predictions of our model
+match up with reality.
 \end{abstract} 
 
 \category{F.2.0}{Analysis of Algorithms and Problem Complexity}{General} 
@@ -32,7 +42,7 @@ We define a simple model of virtual memory in an effort to predict the number of
 \begin{document} 
 \begin{bottomstuff} 
 This research was supported by a summer grant from Manhattan College.\\
-Author's Address: \url{peter.boothe@manhattan.edu}, or P. Boothe, Manhattan College Math and Computer Science Dept. RLC 201, 3840 Corlear Ave, Bronx, NY 10463\\
+Author's Address: \url{peter.boothe@manhattan.edu}, or P. Boothe, Manhattan College Math and Computer Science Dept. RLC 201, 3840 Corlear Ave, Bronx, NY 10463
 \end{bottomstuff} 
 \maketitle 
 
@@ -51,14 +61,22 @@ faults their algorithm will occur on an input of size $n$, assuming the input
 will not fit in available physical memory.  We describe the model
 (Section~\ref{model}), carry out two sample analyses using the model
 (Section~\ref{analysis}), and then experimentally validate the conclusions of
-our analysis (Section~\ref{experiment}).
+our analysis (Section~\ref{experiment}). 
 
- The
-penalty for a page fault in virtual memory can be extreme, and can make
+The penalty for a page fault in virtual memory can be extreme, and can make
 previously-small constants quite large. Thus, it would be of great use to be
 able to easily estimate, for a given algorithm, the number of times the
 algorithm will have to wait for the operating system to retrieve virtual memory
-pages off the hard drive.  On a modern system, the CPU can perform 2 billion operations a second, but the access time to retrieve a page of virtual memory from a consumer hard drive can take as multiple milliseconds.  Even if we assume ultra-fast hard drives, a lower bound of 1 millisecond seems more than resonable, which mean that the process is stalled, waiting for memory, for more than 2 million wasted CPU operations.  If each tick of the CPU clock took a second, then virtual memory would impose a penalty of more than 23 days!  Clearly, it would be good to be able to asymptotically compare the behavior of different algorithms in the presence of virtual memory, so as to minimize the number of page faults.
+pages off the hard drive.  On a modern system, the CPU can perform 2 billion
+operations a second, but the access time to retrieve a page of virtual memory
+from a consumer hard drive can take as multiple milliseconds.  Even if we
+assume ultra-fast hard drives, a lower bound of 1 millisecond seems more than
+resonable, which mean that the process is stalled, waiting for memory, for more
+than 2 million wasted CPU operations.  If each tick of the CPU clock took a
+second, then virtual memory would impose a penalty of more than 23 days!
+Clearly, it would be good to be able to asymptotically compare the behavior of
+different algorithms in the presence of virtual memory, so as to minimize the
+number of page faults.
 
 \section{The Model}
 \label{model}
@@ -66,27 +84,42 @@ pages off the hard drive.  On a modern system, the CPU can perform 2 billion ope
 In the worst case, every memory access will have to go to the hard drive.
 This, however, is not an informative worst-case analysis.  The worst-case page
 fault predictions do not reflect the real-world behavior of virtual memory ---
-they reflect a situation in which every cache access is a cache miss! Our
-model predicts that all non-adjacent memory accesses have a uniform non-zero probability of causing a page fault.
+they reflect a situation in which every cache access is a cache miss. Our model
+predicts that all non-adjacent memory accesses have a uniform non-zero
+probability of causing a page fault.
 
 Our method of estimating the number of page faults is therefore to count the
 number of non-adjacent memory accesses.  Using this, we find that we also end
 up providing a quantitative measure of ``cache friendliness'', which is a term
-often used, but seldom rigorously defined.  We demonstrate our method
-using two classic sorting techniques: \heapsort\ and \mergesort.
+often used, but seldom rigorously defined.  We demonstrate our method using two
+classic sorting techniques: \heapsort\ and \mergesort.
 
-Before we continue, however, we should address one obvious fault of our model --- it is not completely correct!  In particular, if we wrote a program that traversed an array that was twice the size of available memory, our model predicts that we will see at most 1 page fault, when in actuality there will be at least $\frac{n}{2}$.  This objection is correct, as far as it goes, and means that our model can be ``gamed'' and should only serve as a lower-bound measure of page faults if exactness is required.  However, the extreme simplicity of our model has a lot of appeal, so we will conduct our experiments and see if the predictions of our (slightly wrong) model are useful and accurate.
+Before we continue, however, we should address one obvious fault of our model
+--- it is not completely correct!  In particular, if we wrote a program that
+traversed an array that was twice the size of available memory, our model
+predicts that we will see at most 1 page fault, when in actuality there will be
+at least $\frac{n}{2}$.  This objection is correct, as far as it goes, and
+means that our model can be ``gamed'' and should only serve as a lower-bound
+measure of page faults if exactness is required.  However, the extreme
+simplicity of our model has a lot of appeal, so we will conduct our experiments
+and see if the predictions of our (slightly wrong) model are nonetheless useful
+and accurate.
 
 \section{Using the Model to Analyze Existing Algorithms}
 \label{analysis}
 
-In this section, we use our new model to analyze already-developed algorithms.  In particular, we focus on \heapsort\ and \mergesort, because it is a folk theorem that \heapsort\ is not ``cache friendly'', while \mergesort\ is the opposite.  If our analysis can concretize and lend rigor to this folk theorem, then our model might be useful in other situations as well.
+In this section, we use our new model to analyze already-developed algorithms.
+In particular, we focus on \heapsort\ and \mergesort, because it is a folk
+theorem that \heapsort\ is not ``cache friendly'', while \mergesort\ is the
+opposite.  If our analysis can concretize and lend rigor to this folk theorem,
+then our model might be useful in other situations as well.
 
-\subsection{\heapsort\ Page Fault Analysis}
+\subsection{\heapsort\ Page Fault Analysis} 
+
 Our analysis of \heapsort\ is the easiest.  The \heapsort\ algorithm, which we
-take from \citeN{clrs}, is defined, with all of its
-supporting functions, in Figure~\ref{fig:hsort}.  The implementation we tested
-is from the BSD standard library, which is available as {\tt libbsd} on Linux.
+take from \citeN{clrs}, is defined, with all of its supporting functions, in
+Figure~\ref{fig:hsort}.  The implementation we tested is from the BSD standard
+library, which is available as {\tt libbsd} on Linux.
 
 \begin{narrowfig}{1.5in}
 \begin{algorithm}
@@ -127,13 +160,12 @@ of \heapsort\ is proportional to its runtime of $O(n \log n)$.
 
 \subsection{\mergesort\ Page Fault Analysis} 
 
-The \mergesort\ algorithm we adapt from \citeN{clrs} with the
-memory-efficiency improvement that, in the merge step, we only copy out the
-first half of the array, and merge the second half in-place.  Our
-implementation may be found in Figure~\ref{fig:msort}.  In
-our analysis of page faults, the only consideration is the number and location
-of memory accesses, and memory accesses only occur in the ``merge'' portion of
-the algorithm.
+The \mergesort\ algorithm we adapt from \citeN{clrs} with the memory-efficiency
+improvement that, in the merge step, we only copy out the first half of the
+array, and merge the second half in-place.  Our implementation may be found in
+Figure~\ref{fig:msort}.  In our analysis of page faults, the only consideration
+is the number and location of memory accesses, and memory accesses only occur
+in the ``merge'' portion of the algorithm.
 
 \begin{figure}
 {\footnotesize
@@ -181,17 +213,27 @@ void mergesort(int array[], long lo, long hi)
 In merging, the first step is to allocate a new array of size equal to half of
 the passed-in array.  Then, the first half of the passed-in array is copied to
 the new array.  The copying is done by accessing consecutive elements of each
-array, and so once the beginning of each array has been accessed, all subsequent memory accesses are adjacent.  Therefore, the initial step has two non-adjacent accesses.
+array, and so once the beginning of each array has been accessed, all
+subsequent memory accesses are adjacent.  Therefore, the initial step has two
+non-adjacent accesses.
 
-Subsequently, we treat the latter half of the passed-in array as one queue, and the newly-allocated array as the second queue.  We then merge by repeatedly removing the smaller item from the front of the two queues and overwriting an element of the passed-in array.  Every examination requires a memory access, but in all cases except the initial examination of the fronts of the queues, all memory accesses occur adjacent to previous memory accesses.  Therefore, to merge the newly-allocated array and the passed-in array requires two non-adjacent memory accesses.  In total, each call to our \mergesort\ function can require four non-adjacent memory accesses.
+Subsequently, we treat the latter half of the passed-in array as one queue, and
+the newly-allocated array as the second queue.  We then merge by repeatedly
+removing the smaller item from the front of the two queues and overwriting an
+element of the passed-in array.  Every examination requires a memory access,
+but in all cases except the initial examination of the fronts of the queues,
+all memory accesses occur adjacent to previous memory accesses.  Therefore, to
+merge the newly-allocated array and the passed-in array requires two
+non-adjacent memory accesses.  In total, each call to our \mergesort\ function
+can require four non-adjacent memory accesses.
 
-Over the whole of the algorithm, we find that the number
-of non-adjacent accesses for \mergesort\ on an array of size $n$ (which we will call $\NAA(n)$) is $$\NAA(n) = 4 + 2\NAA\left(\frac{n}{2}\right)$$
-By the master theorem, we can see that $\NAA(n) \in \Theta(n)$, and
-we therefore expect the number of page faults to grow linearly with the
-size of the input to \mergesort.
+Over the whole of the algorithm, we find that the number of non-adjacent
+accesses for \mergesort\ on an array of size $n$ (which we will call $\NAA(n)$)
+is $$\NAA(n) = 4 + 2\NAA\left(\frac{n}{2}\right)$$ By the master theorem, we
+can see that $\NAA(n) \in \Theta(n)$, and we therefore expect the number of
+page faults to grow linearly with the size of the input to \mergesort.
 
-\section{Experimental Validation of Model Conclusions}
+\section{Experimental Validation of Model Conclusions} 
 \label{experiment}
 
 A model can not be experimentally verified to be correct, it can only be shown
@@ -214,17 +256,22 @@ half was allocated as a RAM disk.  The swap partition of the emulated machine
 was a file stored on that RAM disk.  This meant that the page faults of the
 emulated machine would still be recorded, but that the emulated machine would
 not suffer a performance hit, as the emulated swap was backed by a (very fast)
-RAM disk!  This technique is recommended for anyone who would like to count
+RAM disk.  This technique is recommended for anyone who would like to count
 page faults but does not want to waste a lot of time.
 
 Interestingly, the RAM disk turned out to be helpful, but not essential. The
 natural caching behaviour of the host operating system meant that even when the
 emulated swap was backed by a physical hard drive, it was often cached in the
-memory of the host operating system due to the automatic buffering of hard drive reads and writes.
+memory of the host operating system due to the automatic buffering of hard
+drive reads and writes.
 
 \subsection{\heapsort\ and \mergesort\ Implementations and Test Harness}
 
-For \heapsort\ we used the implementation found in the BSD standard library, which is available as {\tt libbsd} on Linux.  For \mergesort\ we wrote our own implementation, which can be found in Figure~\ref{fig:msort}.  The test harness that we used was exactly the same for both algorithms, and can be seen in Figure~\ref{fig:harness}.
+For \heapsort\ we used the implementation found in the BSD standard library,
+which is available as {\tt libbsd} on Linux.  For \mergesort\ we wrote our own
+implementation, which can be found in Figure~\ref{fig:msort}.  The test harness
+that we used was exactly the same for both algorithms, and can be seen in
+Figure~\ref{fig:harness}.
 
 \begin{narrowfig}{3in}
 \begin{Verbatim}[numbers=left,numbersep=3pt,xleftmargin=20pt]
@@ -269,7 +316,7 @@ int main(int argc, char **argv)
 
 \begin{figure}
 \input{sorts/ratios.tex}
-\caption{Number major page faults for \heapsort\ divided by the number of major page faults for \mergesort\ at a variety of memory sizes.  The fact that this ratio grows over time indicates the \heapsort\ has asymptotically more page faults than \mergesort, which is exactly what is predicted by our model!}
+\caption{Number major page faults for \heapsort\ divided by the number of major page faults for \mergesort\ at a variety of memory sizes.  The fact that this ratio grows over time indicates the \heapsort\ has asymptotically more page faults than \mergesort, which is exactly what is predicted by our model.}
 \end{figure}
 
 \section{Conclusion}
@@ -278,6 +325,6 @@ int main(int argc, char **argv)
 \bibliography{bibliography}
 
 \begin{received} 
-Received Month Year; revised Month Year; accepted Month Year 
+Submission to ALENEX 2011
 \end{received}
 \end{document}
