@@ -1,24 +1,38 @@
-\documentclass{acmtrans2m}
-
-\def\endbottomstuff{\end{figure}\gdef\permission{}}
-
-\def\runningfoot{\def\@runningfoot{}}
-\def\firstfoot{\def\@firstfoot{}}
+\documentclass[11pt]{article}
 
 \usepackage{url}
 \usepackage{salgorithm}
 \usepackage{graphicx} \graphicspath{{sorts/}}
 \usepackage{fancyvrb}
+\usepackage[letterpaper]{geometry}
 
 %\acmVolume{V} 
 %\acmNumber{N} 
 %\acmYear{YY} 
 %\acmMonth{M} 
+%
+%\category{F.2.0}{Analysis of Algorithms and Problem Complexity}{General} 
+%\category{D.4.2}{Operating Systems}{Storage Management} [Virtual Memory]
+%\category{D.4.8}{Operating Systems}{Performance} [Modeling and Prediction]
+%\terms{Algorithms, Measurement, Experimentation} 
+%\keywords{Virtual Memory, Algorithm Analysis} 
 \markboth{Peter Boothe}{A Simple, Useful Model of Virtual Memory} 
 \title{A Simple, Useful, and Only Slightly Wrong Model of Virtual Memory}
-\author{PETER BOOTHE\\
+\author{Peter Boothe\thanks{This research was supported by a summer grant from Manhattan College.
+Author's Address: \texttt{peter.boothe@manhattan.edu}, or P. Boothe, Manhattan College Math and Computer Science Dept. RLC 201, 3840 Corlear Ave, Bronx, NY 10463
+}\\
 Manhattan College
 }
+
+\newcommand{\heapsort}{{\sc HeapSort}}
+\newcommand{\quicksort}{{\sc QuickSort}}
+\newcommand{\mergesort}{{\sc MergeSort}}
+\newcommand{\NAA}{\textrm{NAA}}
+
+\begin{document} 
+
+\maketitle 
+
 \begin{abstract} 
 We define a simple model of virtual memory in an effort to predict the number
 of page faults that an algorithm will incur over the course of its lifetime.
@@ -27,24 +41,6 @@ with two of the best-known and most well-studied sorting algorithms.  Then, we
 run multiple experiments in an effort to show that the predictions of our model
 match up with reality.
 \end{abstract} 
-
-\category{F.2.0}{Analysis of Algorithms and Problem Complexity}{General} 
-\category{D.4.2}{Operating Systems}{Storage Management} [Virtual Memory]
-\category{D.4.8}{Operating Systems}{Performance} [Modeling and Prediction]
-\terms{Algorithms, Measurement, Experimentation} 
-\keywords{Virtual Memory, Algorithm Analysis} 
-
-\newcommand{\heapsort}{{\sc HeapSort}}
-\newcommand{\quicksort}{{\sc QuickSort}}
-\newcommand{\mergesort}{{\sc MergeSort}}
-\newcommand{\NAA}{\textrm{NAA}}
-
-\begin{document} 
-\begin{bottomstuff} 
-This research was supported by a summer grant from Manhattan College.\\
-Author's Address: \url{peter.boothe@manhattan.edu}, or P. Boothe, Manhattan College Math and Computer Science Dept. RLC 201, 3840 Corlear Ave, Bronx, NY 10463
-\end{bottomstuff} 
-\maketitle 
 
 
 As memory requirements begin to outstrip available memory on a machine, the
@@ -132,11 +128,11 @@ in other situations as well.
 \subsection{\heapsort\ Page Fault Analysis} 
 
 Our analysis of \heapsort\ is the easiest.  The \heapsort\ algorithm, which we
-take from \citeN{clrs}, is defined, with all of its supporting functions, in
+take from \cite{clrs}, is defined, with all of its supporting functions, in
 Figure~\ref{fig:hsort}.  The implementation we tested is from the BSD standard
 library, which is available as {\tt libbsd} on Linux.
 
-\begin{narrowfig}{1.5in}
+\begin{figure}
 \begin{algorithm}
 \Algorithm{HeapSort}$(array, size)$\+\\
     Build-Max-Heap$(array, size)$\\
@@ -165,7 +161,7 @@ library, which is available as {\tt libbsd} on Linux.
 
 \caption{\heapsort\ pseudo code.}
 \label{fig:hsort}
-\end{narrowfig}
+\end{figure}
 
 In the pseudocode of \heapsort, we note that, with the exception of the very
 top of the heap, at no point do we ever access memory adjacent to the most
@@ -175,7 +171,7 @@ of \heapsort\ is proportional to its runtime of $O(n \log n)$.
 
 \subsection{\mergesort\ Page Fault Analysis} 
 
-The \mergesort\ algorithm we adapt from \citeN{clrs} with the memory-efficiency
+The \mergesort\ algorithm we adapt from \cite{clrs} with the memory-efficiency
 improvement that, in the merge step, we only copy out the first half of the
 array, and merge the second half in-place.  Our implementation may be found in
 Figure~\ref{fig:msort}.  In our analysis of page faults, the only consideration
@@ -255,7 +251,7 @@ A model can not be experimentally verified to be correct, it can only be shown
 that the available tests do not prove the model wrong.  Here, we construct a
 set of tests in an attempt to disprove our model.
 
-\begin{narrowfig}{3in}
+\begin{figure}
 \begin{Verbatim}[numbers=left,numbersep=3pt,xleftmargin=20pt]
 #include <stdio.h>
 #include <stdlib.h>
@@ -287,7 +283,7 @@ int main(int argc, char **argv)
 \end{Verbatim}
 \caption{Our test harness for both algorithms}
 \label{fig:harness}
-\end{narrowfig}
+\end{figure}
 \subsection{Experimental Setup}
 
 To analyze the number of major page faults in an algorithm, we must run our
@@ -372,7 +368,7 @@ more algorithms than just the two tested here.  Also, a deeper understanding of
 why our incorrect model gives such good and useful results (and when it can be
 counted upon to do so) would be of great interest.
 
-\bibliographystyle{acmtrans}
+\bibliographystyle{abbrv}
 \bibliography{bibliography}
 
 \appendix
@@ -382,7 +378,7 @@ counted upon to do so) would be of great interest.
 All code written, all experimental data collected, and even this article may be found online at \url{http://github.com/pboothe/vmanalysis}
 
 
-\begin{received} 
+%\begin{received} 
 Submission to ALENEX 2011
-\end{received}
+%\end{received}
 \end{document}
