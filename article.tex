@@ -21,7 +21,7 @@ Manhattan College
 }
 \begin{abstract} 
 We define a simple model of virtual memory in an effort to predict the number
-of page faults that an algorithm will occur over the course of its lifetime.
+of page faults that an algorithm will incur over the course of its lifetime.
 We then use that model to analyze how many page faults we would expect to see
 with two of the best-known and most well-studied sorting algorithms.  Then, we
 run multiple experiments in an effort to show that the predictions of our model
@@ -57,7 +57,7 @@ virtual memory.  In this paper we introduce a model of virtual memory that has
 the benefits of being both simple and useful.  As designed, it is also slightly
 incorrect, but it seems to work in practice nonetheless.  This new method
 allows an algorithm designer or implementer to quickly derive how many page
-faults their algorithm will occur on an input of size $n$, assuming the input
+faults their algorithm will incur on an input of size $n$, assuming the input
 will not fit in available physical memory.  We describe the model
 (Section~\ref{model}), carry out two sample analyses using the model
 (Section~\ref{analysis}), and then experimentally validate the conclusions of
@@ -69,14 +69,23 @@ able to easily estimate, for a given algorithm, the number of times the
 algorithm will have to wait for the operating system to retrieve virtual memory
 pages off the hard drive.  On a modern system, the CPU can perform 2 billion
 operations a second, but the access time to retrieve a page of virtual memory
-from a consumer hard drive can take as multiple milliseconds.  Even if we
-assume ultra-fast hard drives, a lower bound of 1 millisecond seems more than
+from a consumer hard drive can be multiple milliseconds.  Even if we assume
+ultra-fast hard drives, a lower bound of 1 millisecond seems more than
 resonable, which mean that the process is stalled, waiting for memory, for more
 than 2 million wasted CPU operations.  If each tick of the CPU clock took a
-second, then virtual memory would impose a penalty of more than 23 days!
-Clearly, it would be good to be able to asymptotically compare the behavior of
-different algorithms in the presence of virtual memory, so as to minimize the
-number of page faults.
+second, then a virtual memory page fault would impose a penalty of more than 23
+days!  Clearly, it would be good to be able to asymptotically compare the
+behavior of different algorithms in the presence of virtual memory, so as to
+minimize the number of page faults.
+
+Prior work in this area is either sparse, or mind-blowingly large, depending on
+whether one counts the development of cache-oblivious algorithms\cite{cacheo},
+external memory sorting, and the optimization of sorting
+algorithms\cite{314324,radix} as related work.  Our purpose here, however, is a
+bit different.  Instead of designing an algorithm for low-memory conditions, we
+seek to take existing algorithms and be able to quickly analyze their
+performance when memory is scarce.
+
 
 \section{The Model}
 \label{model}
@@ -85,34 +94,40 @@ In the worst case, every memory access will have to go to the hard drive.
 This, however, is not an informative worst-case analysis.  The worst-case page
 fault predictions do not reflect the real-world behavior of virtual memory ---
 they reflect a situation in which every cache access is a cache miss. Our model
-predicts that all non-adjacent memory accesses have a uniform non-zero
+avoids the worst case, and instead predicts that all non-adjacent memory
+accesses have a uniform non-zero probability of causing a page fault.  Also, we
+make the simplifying assumption that function calls completely clear the cache,
+so all initial memory accesses after a function call have the same uniform
 probability of causing a page fault.
 
 Our method of estimating the number of page faults is therefore to count the
 number of non-adjacent memory accesses.  Using this, we find that we also end
 up providing a quantitative measure of ``cache friendliness'', which is a term
-often used, but seldom rigorously defined.  We demonstrate our method using two
-classic sorting techniques: \heapsort\ and \mergesort.
+often used, but seldom rigorously defined.  We demonstrate our method by
+comparing two classic sorting techniques: \heapsort\ and \mergesort.
 
-Before we continue, however, we should address one obvious fault of our model
---- it is not completely correct!  In particular, if we wrote a program that
-traversed an array that was twice the size of available memory, our model
-predicts that we will see at most 1 page fault, when in actuality there will be
-at least $\frac{n}{2}$.  This objection is correct, as far as it goes, and
-means that our model can be ``gamed'' and should only serve as a lower-bound
-measure of page faults if exactness is required.  However, the extreme
-simplicity of our model has a lot of appeal, so we will conduct our experiments
-and see if the predictions of our (slightly wrong) model are nonetheless useful
-and accurate.
+Before we continue, however, we should address one obvious fault of our
+model --- it is not completely correct!  In particular, if given a program that
+traversed an array twice the size of available memory, our model predicts that
+we will see at most 1 page fault, when in actuality there will be at least
+$O(\frac{n}{2})$ page faults.  This objection is correct, as far as it goes,
+and means that our model can be ``gamed'' and should only serve as a
+lower-bound measure of page faults if exactness is required.  However, the
+extreme simplicity of our model has great appeal, so we will conduct
+experiments and see if the predictions of our (admittedly slightly wrong) model
+are nonetheless useful and accurate.
 
 \section{Using the Model to Analyze Existing Algorithms}
 \label{analysis}
 
 In this section, we use our new model to analyze already-developed algorithms.
 In particular, we focus on \heapsort\ and \mergesort, because it is a folk
-theorem that \heapsort\ is not ``cache friendly'', while \mergesort\ is the
-opposite.  If our analysis can concretize and lend rigor to this folk theorem,
-then our model might be useful in other situations as well.
+theorem that \heapsort\ is not ``cache friendly'' and that \mergesort\ is
+``cache friendly''.  In this context, we take the term ``cache friendly'' to
+mean that we would expect the number of page faults from \heapsort\ to be
+higher than the number of page faults from \mergesort. If our analysis can
+concretize and lend rigor to this folk theorem, then our model might be useful
+in other situations as well.
 
 \subsection{\heapsort\ Page Fault Analysis} 
 
@@ -238,40 +253,7 @@ page faults to grow linearly with the size of the input to \mergesort.
 
 A model can not be experimentally verified to be correct, it can only be shown
 that the available tests do not prove the model wrong.  Here, we construct a
-set of tests which repeatedly fail to disprove our model.
-
-\subsection{Experimental Setup}
-
-To analyze the number of major page faults in an algorithm, we must run our
-algorithm in low-memory conditions so that the operating system is forced to
-allocate and use virtual memory for our program.  Unfortunately, accessing swap
-is incredibly slow --- a major part of the motivation for our study --- which
-means that under low-memory conditions our tests may require 1000 times more
-time to finish than they would if we weren't using swap.  
-
-We reconcile the opposing forces of our desire for speed and our desire to use
-swap by running our tests in a virtual machine via the Qemu emulator.  The
-machine running the emulator had 4 gigabytes of memory.  Of those 4 gigabytes,
-half was allocated as a RAM disk.  The swap partition of the emulated machine
-was a file stored on that RAM disk.  This meant that the page faults of the
-emulated machine would still be recorded, but that the emulated machine would
-not suffer a performance hit, as the emulated swap was backed by a (very fast)
-RAM disk.  This technique is recommended for anyone who would like to count
-page faults but does not want to waste a lot of time.
-
-Interestingly, the RAM disk turned out to be helpful, but not essential. The
-natural caching behaviour of the host operating system meant that even when the
-emulated swap was backed by a physical hard drive, it was often cached in the
-memory of the host operating system due to the automatic buffering of hard
-drive reads and writes.
-
-\subsection{\heapsort\ and \mergesort\ Implementations and Test Harness}
-
-For \heapsort\ we used the implementation found in the BSD standard library,
-which is available as {\tt libbsd} on Linux.  For \mergesort\ we wrote our own
-implementation, which can be found in Figure~\ref{fig:msort}.  The test harness
-that we used was exactly the same for both algorithms, and can be seen in
-Figure~\ref{fig:harness}.
+set of tests in an attempt to disprove our model.
 
 \begin{narrowfig}{3in}
 \begin{Verbatim}[numbers=left,numbersep=3pt,xleftmargin=20pt]
@@ -306,20 +288,89 @@ int main(int argc, char **argv)
 \caption{Our test harness for both algorithms}
 \label{fig:harness}
 \end{narrowfig}
+\subsection{Experimental Setup}
+
+To analyze the number of major page faults in an algorithm, we must run our
+algorithm in low-memory conditions so that the operating system is forced to
+allocate and use virtual memory for our program.  Unfortunately, accessing swap
+is incredibly slow --- a major part of the motivation for our study --- which
+means that under low-memory conditions our tests may require 1000000 times more
+time to finish than they would if we weren't using swap.  
+
+We reconcile the opposing forces of our desire for speed and our desire to use
+swap by running our tests in a virtual machine via the Qemu emulator.  The
+machine running the emulator had 4 gigabytes of memory.  Of those 4 gigabytes,
+half was allocated as a RAM disk.  The swap partition of the emulated machine
+was a file stored on that RAM disk.  This meant that the page faults of the
+emulated machine would still be recorded, but that the emulated machine would
+not suffer a performance hit, as the emulated swap was backed by a (very fast)
+RAM disk.  This technique is recommended for anyone who would like to count
+page faults but does not want to waste a lot of time to do so.
+
+Interestingly, the RAM disk turned out to be helpful, but not essential. The
+natural caching behaviour of the host operating system meant that even when the
+emulated swap was backed by a file on a physical hard drive, it was often
+cached in the memory of the host operating system due to the host operating
+system's automatic buffering of hard drive reads and writes.
+
+\subsection{Implementations and Test Harness}
+
+For \heapsort\ we used the implementation found in the BSD standard library,
+which is available as {\tt libbsd} on Linux.  For \mergesort\ we wrote our own
+implementation, which can be found in Figure~\ref{fig:msort}.  The test harness
+that we used was exactly the same for both algorithms, and can be seen in
+Figure~\ref{fig:harness}.  To test our algorithms, we declared and allocated a
+single large array, and then we filled that array with many increasing
+sequences.
+
 
 \subsection{Number of Page Faults Compared}
+
+We compare the page faults of \heapsort\ and \mergesort\ for a wide range of memory sizes and problem sizes.  We find that, for problems which do not fit into available memory, \heapsort\ incurs more page faults than \mergesort.  Holding available memory constant, in Figure~\ref{fig:sizes} we see that \mergesort\ almost always has fewer page faults than \heapsort.  We grew available memory in the virtual machine, in increments of 64 megabytes, from a low of 64 megabytes to a high of 512 megabytes.  Each line in the figure represents the behavior with a fixed amount of available memory.
 
 \begin{figure}
 \input{sorts/memsizes.tex}
 \caption{Number of major page faults for \mergesort\ and \heapsort\ at a variety of memory sizes.  Note that at almost all memory sizes, \mergesort\ is better.}
+\label{fig:sizes}
 \end{figure}
+
+As the ratio of problem size to available memory grows, so does the advantage
+of \mergesort\ over \heapsort.  In Figure~\ref{fig:ratio}, we can see the
+number of page faults of \heapsort\ divided by the number of page faults of
+\mergesort\ for a variety of problem sizes.  The ratio, as predicted, rises as
+the amount of memory pressure rises.  As problem sizes increase, \heapsort\
+performs increasingly worse compared to \mergesort. This experimental result is
+precisely in line with the results of our model which suggest that the number of page faults for \heapsort\ is asymptotically greater than the number of page faults in \mergesort\ ($O(n \log n)$ instead of $O(n)$).
 
 \begin{figure}
 \input{sorts/ratios.tex}
 \caption{Number major page faults for \heapsort\ divided by the number of major page faults for \mergesort\ at a variety of memory sizes.  The fact that this ratio grows over time indicates the \heapsort\ has asymptotically more page faults than \mergesort, which is exactly what is predicted by our model.}
+\label{fig:ratio}
 \end{figure}
 
+Because our experimental conclusions are in line with the conclusions of our
+model, we must consider this to be evidence in favor of the model's utility.
+Our experiments have failed to disprove our model, which means that it still
+may be correct enough for our purposes.
+
 \section{Conclusion}
+
+We have described a new model of virtual memory which has the virtue of extreme
+simplicity.  In this model, every memory access which is not adjacent to a previous memory access has a uniform probability of incurring a virtual memory page fault.  Furthermore, all function calls are considered to wipe out our caches, and so all memory accesses after a function call, even if adjacent to memory accessed before the function call, have that same uniform probability of causing a page fault.  This model is, as stated, extremely simple (and a bit simplistic).
+
+In exchange for this simplicity, we had to sacrifice formal correctness.  Using
+experimental techniques, we validated the utility of our method, and showed
+that it does appear to be useful, and at least model the cases of \heapsort\
+and \mergesort\ well.  Much like a buggy program that still remains useful for
+some tasks, we find that our slightly-incorrect analysis technique can, with
+relative ease, provide useful estimates regarding the asymptotic behavior of
+algorithms in the presence of virtual memory.
+
+Future work in this domain would involve testing more algorithms under adverse
+memory conditions to see whether our model accurately reflects the behavior of
+more algorithms than just the two tested here.  Also, a deeper understanding of
+why our incorrect model gives such good and useful results (and when it can be
+counted upon to do so) would be of great interest.
 
 \bibliographystyle{acmtrans}
 \bibliography{bibliography}
