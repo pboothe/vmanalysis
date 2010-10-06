@@ -76,7 +76,7 @@ than 2 million wasted CPU operations.  If each tick of the CPU clock took a
 second, then a virtual memory page fault would impose a penalty of more than 23
 days!  Clearly, it would be good to be able to asymptotically compare the
 behavior of different algorithms in the presence of virtual memory, so as to
-minimize the number of page faults.
+minimize the number of page faults --- either asymptotically or just as a leading constant\cite{queue}. 
 
 Prior work in this area is either sparse, or mind-blowingly large, depending on
 whether one counts the development of cache-oblivious algorithms\cite{cacheo},
@@ -374,6 +374,13 @@ counted upon to do so) would be of great interest.
 
 \bibliographystyle{acmtrans}
 \bibliography{bibliography}
+
+\appendix
+
+\section{Code availability}
+
+All code written, all experimental data collected, and even this article may be found online at \url{http://github.com/pboothe/vmanalysis}
+
 
 \begin{received} 
 Submission to ALENEX 2011
